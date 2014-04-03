@@ -1,11 +1,13 @@
 Modifer := "Esc"
 RemapDic:= {}
-RemapDic["h"] := "Left"
-RemapDic["j"] := "Down"
-RemapDic["k"] := "Up"
-RemapDic["l"] := "Right"
-RemapDic["'"] := "'"
-
+RemapDic["h"] := "\Left"
+RemapDic["j"] := "\Down"
+RemapDic["k"] := "\Up"
+RemapDic["l"] := "\Right"
+RemapDic["n"] := "\Enter"
+RemapDic["'"] := "\'"
+RemapDic["u"] := "`{"
+RemapDic["i"] := "`}"
 
 ;===========================================================================================================
 #SingleInstance, force
@@ -16,10 +18,19 @@ RemapInfo := {}
 ; Add needed hotkey to RemapInfo
 For key, value in RemapDic
 {
-    HKDownStr := Modifer . " & " . key
-	HKUpStr := HKDownStr . " Up"
-	RemapInfo[HKDownStr] := "{" . value . " DownTemp}"
-	RemapInfo[HKUpStr] := "{" . value . " Up}"
+	HKDownStr := Modifer . " & " . key
+	if (SubStr(value, 1, 1) = "\")
+	{
+		; It a key
+		value := SubStr(value, 2)
+		HKUpStr := HKDownStr . " Up"
+		RemapInfo[HKDownStr] := "{Blind}{" . value . " DownTemp}"
+		RemapInfo[HKUpStr] := "{Blind}{" . value . " Up}"
+	}
+	else{
+		RemapInfo[HKDownStr] := "{Raw}" . value
+	}
+
 }
 
 ; Set hotkey
@@ -46,7 +57,7 @@ ReMapKey:
 	SetKeyDelay -1
 	target := RemapInfo[A_ThisHotkey]
 	if target !=
-		Send, {Blind}%target%
+		Send, %target%
 	return
 	
 	
