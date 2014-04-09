@@ -6,9 +6,11 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 SetBatchLines, -1
 
 IniFileName := "config.ini"
-ReadIniFile(IniFileName, MapList)
+ReadIniFile(IniFileName, MapList, SingleMap)
 
 RemapInfo := {}
+SingleRemapInfo := {}
+
 ; Add needed hotkey to RemapInfo
 For modifier, map in MapList
 {
@@ -21,21 +23,17 @@ For modifier, map in MapList
 	; Add Single modifier keyevent map
 	AddKeyEventToRemapInfo(modifier, modifier, RemapInfo)
 }
-
-; Set hotkey
-For key in RemapInfo
+; Add to SingleRemapInfo
+For hk_from, map_to in SingleMap
 {
-	Hotkey, %key%,  ReMapKeySub
+	AddKeyMapToRemapInfo(hk_from, map_to, SingleRemapInfo)
 }
 
-;Key ' for backspace
-'::
-	if GetKeyState("!") or GetKeyState("#") or GetKeyState("+") of GetKeyState("^")
-		Send {Blind}{'}
-	else
-		Send {Blind}{BS}
-	return
-	
+; Set hotkey
+SetHotKey(RemapInfo, "ReMapKeySub")
+SetHotKey(SingleRemapInfo, "SingleRemapSub")
+
+return
 
 ;======================================================================================================
 ; Label
@@ -44,6 +42,19 @@ return
 ReMapKeySub:
 	SetKeyDelay -1
 	target := RemapInfo[A_ThisHotkey]
+	if target !=
+		Send, %target%
+	return
+
+SingleRemapSub:
+	SetKeyDelay -1
+	target :=
+	if GetKeyState("!") or GetKeyState("#") or GetKeyState("+") or GetKeyState("^")
+	{
+		target := A_ThisHotkey
+	} else {
+		target := SingleRemapInfo[A_ThisHotkey]
+	}
 	if target !=
 		Send, %target%
 	return
@@ -72,6 +83,15 @@ AddKeyMapToRemapInfo(hot_key, map_to, ByRef remapInfo)
 	}
 }
 
+
+SetHotKey(ByRef remapInfo, hotkey_handle)
+{
+	For hot_key in remapInfo
+	{
+		Hotkey, %hot_key%,  %hotkey_handle%
+	}
+}
+
 /*
 	Return map_list: map from modifier to remaplist
 	Example, modifer is ESC and TAB. and ESC+j maps to KEY "Down", ESC+u maps to RAW STRING "test".
@@ -80,7 +100,7 @@ AddKeyMapToRemapInfo(hot_key, map_to, ByRef remapInfo)
 							"Tab":{ }
 						}
 */
-ReadIniFile(INI_name, ByRef MapList)
+ReadIniFile(INI_name, ByRef MapList, Byref SingleMap)
 {	
 	MapList := {}
 	
@@ -93,6 +113,10 @@ ReadIniFile(INI_name, ByRef MapList)
 		IniRead, map_read, %INI_name%, %modifier%
 		MapList[modifier] := ParseIniSection(map_read)
 	}
+	
+	; Get Single Map
+	IniRead, singlemap_read, %INI_name%, SingleMap
+	SingleMap := ParseIniSection(singlemap_read)
 }
 
 
