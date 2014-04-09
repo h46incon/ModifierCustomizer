@@ -1,41 +1,140 @@
+#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+; #Warn  ; Enable warnings to assist with detecting common errors.
+SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
+SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 #SingleInstance, force
-SendMode, Input
 SetBatchLines, -1
 
-RemapDic:= {}
-RemapDic["h"] := "Left"
-RemapDic["j"] := "Down"
-RemapDic["k"] := "Up"
-RemapDic["l"] := "Right"
+IniFileName := "config.ini"
+ReadIniFile(IniFileName, MapList, SingleMap)
 
-RemapDownInfo := {}
-RemapUpInfo := {}
+RemapInfo := {}
+SingleRemapInfo := {}
 
-For key, value in RemapDic
+; Add needed hotkey to RemapInfo
+For modifier, map in MapList
 {
-    HKDownStr := "Esc" . " & " . key
-	HKUpStr := "Esc" . " & " . key . " Up"
-	RemapDownInfo[HKDownStr] := value
-	RemapUpInfo[HKUpStr] := value
+	For hk_from, map_to in map
+	{
+		hot_key := modifier . " & " . hk_from
+		AddKeyMapToRemapInfo(hot_key, map_to, RemapInfo)
+	}
 	
-	Hotkey, %HKDownStr%, MapKeyDown
-	Hotkey, %HKUpStr%, MapKeyUp
-}	
+	; Add Single modifier keyevent map
+	AddKeyEventToRemapInfo(modifier, modifier, RemapInfo)
+}
+; Add to SingleRemapInfo
+For hk_from, map_to in SingleMap
+{
+	AddKeyMapToRemapInfo(hk_from, map_to, SingleRemapInfo)
+}
 
-Esc::Esc
+; Set hotkey
+SetHotKey(RemapInfo, "ReMapKeySub")
+SetHotKey(SingleRemapInfo, "SingleRemapSub")
 
 return
 
-MapKeyDown:
-	SetKeyDelay -1   ; If the destination key is a mouse button, SetMouseDelay is used instead.
-	target := RemapDownInfo[A_ThisHotkey]
+;======================================================================================================
+; Label
+return
+
+ReMapKeySub:
+	SetKeyDelay -1
+	target := RemapInfo[A_ThisHotkey]
 	if target !=
-		Send {Blind}{%target% DownTemp}
+		Send, %target%
+	return
+
+SingleRemapSub:
+	SetKeyDelay -1
+	target :=
+	if GetKeyState("!") or GetKeyState("#") or GetKeyState("+") or GetKeyState("^")
+	{
+		target := A_ThisHotkey
+	} else {
+		target := SingleRemapInfo[A_ThisHotkey]
+	}
+	if target !=
+		Send, %target%
 	return
 	
-MapKeyUp:
-	SetKeyDelay -1   ; If the destination key is a mouse button, SetMouseDelay is used instead.
-	target := RemapUpInfo[A_ThisHotkey]
-	if target !=
-		Send {Blind}{%target% Up}
-	return
+	
+AddKeyEventToRemapInfo(hk_from, hk_to, ByRef remapInfo)
+{
+	key_down_str := hk_from
+	key_up_str := key_down_str . " Up"
+	
+	remapInfo[key_down_str] := "{Blind}{" . hk_to . " DownTemp}"
+	remapInfo[key_up_str] := "{Blind}{" . hk_to . " Up}"
+}
+	
+	
+AddKeyMapToRemapInfo(hot_key, map_to, ByRef remapInfo)
+{
+	if (SubStr(map_to, 1, 1) = "\")
+	{
+		; It a key
+		map_to := SubStr(map_to, 2)
+		AddKeyEventToRemapInfo(hot_key, map_to, remapInfo)
+	}
+	else{
+		remapInfo[hot_key] := "{Raw}" . map_to
+	}
+}
+
+
+SetHotKey(ByRef remapInfo, hotkey_handle)
+{
+	For hot_key in remapInfo
+	{
+		Hotkey, %hot_key%,  %hotkey_handle%
+	}
+}
+
+/*
+	Return map_list: map from modifier to remaplist
+	Example, modifer is ESC and TAB. and ESC+j maps to KEY "Down", ESC+u maps to RAW STRING "test".
+		modifier_list = {
+							"Esc":{"j":"\Down" , "k":"\Up", "u":"test" } , 
+							"Tab":{ }
+						}
+*/
+ReadIniFile(INI_name, ByRef MapList, Byref SingleMap)
+{	
+	MapList := {}
+	
+	; Get modifier list
+	IniRead, modifier_list, %INI_name%, Modifier, Modifier, ""
+	
+	Loop, Parse, modifier_list, |
+	{
+		modifier := Trim(A_LoopField)
+		IniRead, map_read, %INI_name%, %modifier%
+		MapList[modifier] := ParseIniSection(map_read)
+	}
+	
+	; Get Single Map
+	IniRead, singlemap_read, %INI_name%, SingleMap
+	SingleMap := ParseIniSection(singlemap_read)
+}
+
+
+; Return key:value map
+ParseIniSection(ByRef section_str)
+{
+	kv_map := {}
+	Loop, Parse, section_str, `n, `r ; Specifying `n prior to `r allows both Windows and Unix files to be parsed.
+	{
+		StringSplit, key_value, A_LoopField, "="
+		if key_value0 > 0
+		{
+			kv_map[key_value1] := key_value2
+		}
+	}
+	
+	return kv_map
+}
+
+
+
