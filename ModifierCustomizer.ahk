@@ -3,10 +3,24 @@
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 #SingleInstance, force
+#NoTrayIcon
+Process Priority,,High
 SetBatchLines, -1
 
+; Global Setting
 IniFileName := "config.ini"
+IconFileName := "Icon.ico"
+;======================================================================================
+
 IniOption := ReadIniFile(IniFileName)
+
+; Set tray icon 
+If not IniOption.NoTrayIcon
+{
+  Menu TRAY, Icon
+  IfExist %IconFileName%
+    Menu TRAY, Icon, %IconFileName%
+}
 
 MapList := IniOption.MapList
 SingleMap := IniOption.SingleMap
@@ -107,6 +121,12 @@ SetHotKey(ByRef remapInfo, hotkey_handle)
 ReadIniFile(INI_name)
 {	
 	INI_option := {}
+	
+	; Read Global option
+	IniRead, no_tray, %INI_name%, Global, NoTrayIcon, ""
+	if no_tray != 1
+		no_tray = 0
+	INI_option.NoTrayIcon := no_tray
 
 	; Get modifier list
 	MapList := {}
