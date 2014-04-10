@@ -6,7 +6,11 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 SetBatchLines, -1
 
 IniFileName := "config.ini"
-ReadIniFile(IniFileName, MapList, SingleMap)
+IniOption := ReadIniFile(IniFileName)
+
+MapList := IniOption.MapList
+SingleMap := IniOption.SingleMap
+
 
 RemapInfo := {}
 SingleRemapInfo := {}
@@ -100,11 +104,12 @@ SetHotKey(ByRef remapInfo, hotkey_handle)
 							"Tab":{ }
 						}
 */
-ReadIniFile(INI_name, ByRef MapList, Byref SingleMap)
+ReadIniFile(INI_name)
 {	
-	MapList := {}
-	
+	INI_option := {}
+
 	; Get modifier list
+	MapList := {}
 	IniRead, modifier_list, %INI_name%, Modifier, Modifier, ""
 	
 	Loop, Parse, modifier_list, |
@@ -113,10 +118,13 @@ ReadIniFile(INI_name, ByRef MapList, Byref SingleMap)
 		IniRead, map_read, %INI_name%, %modifier%
 		MapList[modifier] := ParseIniSection(map_read)
 	}
+	INI_option.MapList := MapList
 	
 	; Get Single Map
 	IniRead, singlemap_read, %INI_name%, SingleMap
-	SingleMap := ParseIniSection(singlemap_read)
+	INI_option.SingleMap := ParseIniSection(singlemap_read)
+	
+	return INI_option
 }
 
 
