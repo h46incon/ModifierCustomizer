@@ -25,13 +25,12 @@ If not IniOption.NoTrayIcon
 MapList := IniOption.MapList
 SingleMap := IniOption.SingleMap
 
-
 RemapInfo := {}
-SingleRemapInfo := {}
 
 ; Add needed hotkey to RemapInfo
 For modifier, map in MapList
 {
+
 	For hk_from, map_to in map
 	{
 		hot_key := modifier . " & " . hk_from
@@ -39,17 +38,17 @@ For modifier, map in MapList
 	}
 	
 	; Add Single modifier keyevent map
-	AddKeyEventToRemapInfo(modifier, modifier, RemapInfo)
+	w_modifier := "*" . modifier
+	AddKeyEventToRemapInfo(w_modifier, modifier, RemapInfo)
 }
 ; Add to SingleRemapInfo
 For hk_from, map_to in SingleMap
 {
-	AddKeyMapToRemapInfo(hk_from, map_to, SingleRemapInfo)
+	AddKeyMapToRemapInfo(hk_from, map_to, RemapInfo)
 }
 
 ; Set hotkey
 SetHotKey(RemapInfo, "ReMapKeySub")
-SetHotKey(SingleRemapInfo, "SingleRemapSub")
 
 return
 
@@ -63,20 +62,6 @@ ReMapKeySub:
 	if target !=
 		Send, %target%
 	return
-
-SingleRemapSub:
-	SetKeyDelay -1
-	target :=
-	if GetKeyState("!") or GetKeyState("#") or GetKeyState("+") or GetKeyState("^")
-	{
-		target := A_ThisHotkey
-	} else {
-		target := SingleRemapInfo[A_ThisHotkey]
-	}
-	if target !=
-		Send, %target%
-	return
-	
 	
 AddKeyEventToRemapInfo(hk_from, hk_to, ByRef remapInfo)
 {
