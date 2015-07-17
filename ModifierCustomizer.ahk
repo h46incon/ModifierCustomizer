@@ -21,6 +21,10 @@ If not IniOption.NoTrayIcon
   IfExist %IconFileName%
     Menu TRAY, Icon, %IconFileName%
 }
+; Conf tray item
+Menu, tray, NoStandard
+Menu, tray, add, Reload, ReloadLab
+Menu, tray, add, Exit, ExitLab
 
 MapList := IniOption.MapList
 SingleMap := IniOption.SingleMap
@@ -52,6 +56,17 @@ SetHotKey(RemapInfo, "ReMapKeySub")
 
 return
 
+;============================ Tray item sub ==========================================================
+ReloadLab:
+    Reload
+    Sleep 1000 ; If successful, the reload will close this instance during the Sleep, so the line below will never be reached.
+    MsgBox, 4,, The script could not be reloaded. Would you like to open it for editing?
+    IfMsgBox, Yes, Edit
+    return
+
+ExitLab:
+    ExitApp 0
+    return
 ;======================================================================================================
 ; Label
 return
