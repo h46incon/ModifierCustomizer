@@ -130,7 +130,7 @@ ReadIniFile(INI_name)
 
 	; Get modifier list
 	MapList := {}
-	IniRead, modifier_list, %INI_name%, Modifier, Modifier, ""
+	IniRead, modifier_list, %INI_name%, Modifier, Modifier, %A_Space%
 	
 	Loop, Parse, modifier_list, |
 	{
