@@ -154,10 +154,10 @@ ParseIniSection(ByRef section_str)
 	kv_map := {}
 	Loop, Parse, section_str, `n, `r ; Specifying `n prior to `r allows both Windows and Unix files to be parsed.
 	{
-		StringSplit, key_value, A_LoopField, "="
-		if key_value0 > 0
+		items := StrSplit(A_LoopField, "=")
+		if items.Length() > 0
 		{
-			kv_map[key_value1] := key_value2
+			kv_map[items[1]] := items[2]
 		}
 	}
 	
