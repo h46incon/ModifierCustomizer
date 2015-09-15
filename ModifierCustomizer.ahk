@@ -135,34 +135,35 @@ ReadIniFile(INI_name)
 	Loop, Parse, modifier_list, |
 	{
 		modifier := Trim(A_LoopField)
-		IniRead, map_read, %INI_name%, %modifier%
-		MapList[modifier] := ParseIniSection(map_read)
+		MapList[modifier] := ParseIniSection(INI_name, modifier)
 	}
 	INI_option.MapList := MapList
 	
 	; Get Single Map
-	IniRead, singlemap_read, %INI_name%, SingleMap
-	INI_option.SingleMap := ParseIniSection(singlemap_read)
+	INI_option.SingleMap := ParseIniSection(INI_name, "SingleMap")
 	
 	return INI_option
 }
 
-
 ; Return key:value map
-ParseIniSection(ByRef section_str)
+ParseIniSection(INI_name, section_name)
 {
+	IniRead, section_str, %INI_name%, %section_name%
+	
 	kv_map := {}
 	Loop, Parse, section_str, `n, `r ; Specifying `n prior to `r allows both Windows and Unix files to be parsed.
 	{
 		items := StrSplit(A_LoopField, "=")
 		if items.Length() > 0
 		{
-			kv_map[items[1]] := items[2]
+			map_key := items[1]
+			IniRead, map_val, %INI_name%, %section_name%, %map_key%, %A_Space%
+			if (map_val != "")
+			{
+				kv_map[map_key] := map_val
+			}
 		}
 	}
 	
 	return kv_map
 }
-
-
-
