@@ -21,10 +21,8 @@ If not IniOption.NoTrayIcon
   IfExist %IconFileName%
     Menu TRAY, Icon, %IconFileName%
 }
-; Conf tray item
-Menu, tray, NoStandard
+; Add reload button in tray
 Menu, tray, add, Reload, ReloadLab
-Menu, tray, add, Exit, ExitLab
 
 MapList := IniOption.MapList
 SingleMap := IniOption.SingleMap
@@ -64,9 +62,6 @@ ReloadLab:
     IfMsgBox, Yes, Edit
     return
 
-ExitLab:
-    ExitApp 0
-    return
 ;======================================================================================================
 ; Label
 return
